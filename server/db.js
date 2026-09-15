@@ -14,6 +14,8 @@ async function initDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
+      reset_token_hash TEXT,
+      reset_token_expires TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -28,6 +30,17 @@ async function initDb() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  // Migration : ajoute les colonnes de reset si la table users existait déjà sans elles
+  const columns = await db.execute("PRAGMA table_info(users)");
+  const columnNames = columns.rows.map(col => col.name);
+
+  if (!columnNames.includes('reset_token_hash')) {
+    await db.execute('ALTER TABLE users ADD COLUMN reset_token_hash TEXT');
+  }
+  if (!columnNames.includes('reset_token_expires')) {
+    await db.execute('ALTER TABLE users ADD COLUMN reset_token_expires TEXT');
+  }
 }
 
 module.exports = { db, initDb };

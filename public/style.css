@@ -133,3 +133,23 @@ button[type="submit"] {
   font-size: 16px;
   padding: 4px 8px;
 }
+
+.link-btn {
+  display: block;
+  margin: 12px auto 0;
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.9em;
+}
+
+#forgot-result {
+  background-color: #dcfce7;
+  color: #166534;
+  padding: 10px 14px;
+  border-radius: 4px;
+  margin-top: 12px;
+  word-break: break-all;
+}

@@ -246,3 +246,94 @@ if (localStorage.getItem('token')) {
 } else {
   showAuthView();
 }
+
+const forgotView = document.getElementById('forgot-view');
+const resetView = document.getElementById('reset-view');
+const forgotPasswordLink = document.getElementById('forgot-password-link');
+const backToLoginBtn = document.getElementById('back-to-login-btn');
+const forgotForm = document.getElementById('forgot-form');
+const forgotEmail = document.getElementById('forgot-email');
+const forgotResult = document.getElementById('forgot-result');
+const resetForm = document.getElementById('reset-form');
+const resetNewPassword = document.getElementById('reset-new-password');
+
+function hideAllViews() {
+  authView.style.display = 'none';
+  appView.style.display = 'none';
+  forgotView.style.display = 'none';
+  resetView.style.display = 'none';
+}
+
+forgotPasswordLink.addEventListener('click', () => {
+  hideAllViews();
+  forgotView.style.display = 'block';
+  forgotResult.style.display = 'none';
+  clearError();
+});
+
+backToLoginBtn.addEventListener('click', () => {
+  hideAllViews();
+  showAuthView();
+});
+
+forgotForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  clearError();
+
+  try {
+    const res = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: forgotEmail.value.trim() })
+    });
+    const data = await res.json();
+
+    forgotResult.textContent = data.devResetLink
+      ? `${data.message} Lien (mode démo) : ${data.devResetLink}`
+      : data.message;
+    forgotResult.style.display = 'block';
+    forgotForm.reset();
+  } catch (err) {
+    showError('Erreur de connexion au serveur.');
+  }
+});
+
+resetForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  clearError();
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('resetToken');
+
+  try {
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword: resetNewPassword.value })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError(data.error);
+      return;
+    }
+
+    alert('Mot de passe réinitialisé ! Tu peux maintenant te connecter.');
+    window.history.replaceState({}, '', '/'); // nettoie l'URL du token
+    hideAllViews();
+    showAuthView();
+  } catch (err) {
+    showError('Erreur de connexion au serveur.');
+  }
+});
+
+// --- Point d'entrée : vérifie s'il y a un token de reset dans l'URL ---
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('resetToken')) {
+  hideAllViews();
+  resetView.style.display = 'block';
+} else if (localStorage.getItem('token')) {
+  showAppView();
+} else {
+  showAuthView();
+}

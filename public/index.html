@@ -10,22 +10,42 @@
 
   <!-- Vue authentification (inscription/connexion) -->
   <section id="auth-view">
-    <h1>Gestionnaire de Tâches</h1>
+  <h1>Gestionnaire de Tâches</h1>
 
-    <div class="tabs">
-      <button id="tab-login" class="tab active">Connexion</button>
-      <button id="tab-register" class="tab">Inscription</button>
+  <div class="tabs">
+    <button id="tab-login" class="tab active">Connexion</button>
+    <button id="tab-register" class="tab">Inscription</button>
+  </div>
+
+  <form id="auth-form">
+    <input type="email" id="auth-email" placeholder="Email" required>
+    <div class="password-field">
+      <input type="password" id="auth-password" placeholder="Mot de passe (8 caractères min.)" required minlength="8">
+      <button type="button" id="toggle-password" aria-label="Afficher le mot de passe">👁️</button>
     </div>
+    <button type="submit" id="auth-submit">Se connecter</button>
+  </form>
 
-    <form id="auth-form">
-      <input type="email" id="auth-email" placeholder="Email" required>
-      <div class="password-field">
-        <input type="password" id="auth-password" placeholder="Mot de passe (8 caractères min.)" required minlength="8">
-        <button type="button" id="toggle-password" aria-label="Afficher le mot de passe">👁️</button>
-      </div>
-      <button type="submit" id="auth-submit">Se connecter</button>
-    </form>
-  </section>
+  <button type="button" id="forgot-password-link" class="link-btn">Mot de passe oublié ?</button>
+</section>
+
+<section id="forgot-view" style="display: none;">
+  <h1>Mot de passe oublié</h1>
+  <form id="forgot-form">
+    <input type="email" id="forgot-email" placeholder="Email" required>
+    <button type="submit">Envoyer le lien</button>
+  </form>
+  <p id="forgot-result" style="display: none;"></p>
+  <button type="button" id="back-to-login-btn" class="link-btn">Retour à la connexion</button>
+</section>
+
+<section id="reset-view" style="display: none;">
+  <h1>Réinitialiser le mot de passe</h1>
+  <form id="reset-form">
+    <input type="password" id="reset-new-password" placeholder="Nouveau mot de passe (8 caractères min.)" required minlength="8">
+    <button type="submit">Réinitialiser</button>
+  </form>
+</section>
 
   <!-- Vue application (visible uniquement une fois connecté) -->
   <section id="app-view" style="display: none;">
