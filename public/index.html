@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Task Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="error-message" style="display: none;"></div>
+
+  <!-- Vue authentification (inscription/connexion) -->
+  <section id="auth-view">
+    <h1>Gestionnaire de Tâches</h1>
+
+    <div class="tabs">
+      <button id="tab-login" class="tab active">Connexion</button>
+      <button id="tab-register" class="tab">Inscription</button>
+    </div>
+
+    <form id="auth-form">
+      <input type="email" id="auth-email" placeholder="Email" required>
+      <input type="password" id="auth-password" placeholder="Mot de passe (8 caractères min.)" required minlength="8">
+      <button type="submit" id="auth-submit">Se connecter</button>
+    </form>
+  </section>
+
+  <!-- Vue application (visible uniquement une fois connecté) -->
+  <section id="app-view" style="display: none;">
+    <div class="app-header">
+      <h1>Mes tâches</h1>
+      <button id="logout-btn">Déconnexion</button>
+    </div>
+
+    <form id="task-form">
+      <input type="text" id="task-input" placeholder="Nouvelle tâche..." required>
+      <button type="submit">Ajouter</button>
+    </form>
+
+    <ul id="task-list"></ul>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
