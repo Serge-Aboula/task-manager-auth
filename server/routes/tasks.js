@@ -48,11 +48,19 @@ router.put('/:id', async (req, res) => {
     return res.status(404).json({ error: 'Tâche introuvable' });
   }
 
-  const done = req.body.done ? 1 : 0;
+  const current = existing.rows[0];
+
+  // On ne modifie que les champs fournis, on garde les autres inchangés
+  const text = req.body.text !== undefined ? req.body.text.trim() : current.text;
+  const done = req.body.done !== undefined ? (req.body.done ? 1 : 0) : current.done;
+
+  if (!text) {
+    return res.status(400).json({ error: 'Le texte ne peut pas être vide' });
+  }
 
   await db.execute({
-    sql: 'UPDATE tasks SET done = ? WHERE id = ?',
-    args: [done, id]
+    sql: 'UPDATE tasks SET text = ?, done = ? WHERE id = ?',
+    args: [text, done, id]
   });
 
   const updated = await db.execute({

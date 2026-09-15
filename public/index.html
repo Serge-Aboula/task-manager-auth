@@ -19,7 +19,10 @@
 
     <form id="auth-form">
       <input type="email" id="auth-email" placeholder="Email" required>
-      <input type="password" id="auth-password" placeholder="Mot de passe (8 caractères min.)" required minlength="8">
+      <div class="password-field">
+        <input type="password" id="auth-password" placeholder="Mot de passe (8 caractères min.)" required minlength="8">
+        <button type="button" id="toggle-password" aria-label="Afficher le mot de passe">👁️</button>
+      </div>
       <button type="submit" id="auth-submit">Se connecter</button>
     </form>
   </section>

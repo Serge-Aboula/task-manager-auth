@@ -7,7 +7,7 @@
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
     "pretest": "node -e \"try { require('fs').unlinkSync('test.db') } catch(e) {}\"",
-    "test": "cross-env NODE_ENV=test node --test test/"
+    "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 test/"
   },
   "keywords": [],
   "author": "",
