@@ -7,6 +7,7 @@ const tabRegister = document.getElementById('tab-register');
 const authForm = document.getElementById('auth-form');
 const authEmail = document.getElementById('auth-email');
 const authPassword = document.getElementById('auth-password');
+const togglePasswordBtn = document.getElementById('toggle-password');
 const authSubmit = document.getElementById('auth-submit');
 
 const logoutBtn = document.getElementById('logout-btn');
@@ -43,6 +44,16 @@ tabRegister.addEventListener('click', () => {
 });
 
 // --- Soumission du formulaire d'authentification ---
+togglePasswordBtn.addEventListener('click', () => {
+  const isPassword = authPassword.type === 'password';
+  authPassword.type = isPassword ? 'text' : 'password';
+  togglePasswordBtn.textContent = isPassword ? '🙈' : '👁️';
+  togglePasswordBtn.setAttribute(
+    'aria-label',
+    isPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
+  );
+});
+
 authForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   clearError();
@@ -138,15 +149,44 @@ function renderTasks(tasks) {
     span.textContent = task.text;
     if (task.done) span.style.textDecoration = 'line-through';
 
+    const editBtn = document.createElement('button');
+    editBtn.textContent = '✏️';
+    editBtn.addEventListener('click', () => editTask(task.id, task.text, span));
+    
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = '🗑️';
-    deleteBtn.addEventListener('click', () => deleteTask(task.id));
+    deleteBtn.addEventListener('click', () => deleteTask(task.id, task.text));
 
     li.appendChild(checkbox);
     li.appendChild(span);
+    li.appendChild(editBtn);
     li.appendChild(deleteBtn);
     taskList.appendChild(li);
   });
+}
+
+function editTask(id, currentText, _span) {
+  const newText = prompt('Modifier la tâche :', currentText);
+  if (newText === null) return; // annulé
+  const trimmed = newText.trim();
+  if (!trimmed || trimmed === currentText) return;
+
+  updateTaskText(id, trimmed);
+}
+
+async function updateTaskText(id, text) {
+  try {
+    clearError();
+    const res = await authFetch(`/api/tasks/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (!res.ok) throw new Error();
+    fetchTasks();
+  } catch (err) {
+    showError('Impossible de modifier cette tâche.');
+  }
 }
 
 taskForm.addEventListener('submit', async (event) => {
@@ -187,8 +227,12 @@ async function toggleDone(id, done) {
   }
 }
 
-async function deleteTask(id) {
+async function deleteTask(id, text) {
+  const confirmed = confirm(`Supprimer la tâche "${text}" ? Cette action est irréversible.`);
+  if (!confirmed) return;
+
   try {
+    clearError();
     await authFetch(`/api/tasks/${id}`, { method: 'DELETE' });
     fetchTasks();
   } catch (err) {
