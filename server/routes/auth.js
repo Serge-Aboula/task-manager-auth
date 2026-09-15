@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { db } = require('../db');
+const crypto = require('crypto');
 
 const router = express.Router();
 const SALT_ROUNDS = 10;
@@ -74,6 +75,86 @@ router.post('/login', async (req, res) => {
   );
 
   res.json({ token, email: user.email });
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+  const email = (req.body.email || '').trim().toLowerCase();
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email requis' });
+  }
+
+  const result = await db.execute({
+    sql: 'SELECT id FROM users WHERE email = ?',
+    args: [email]
+  });
+  const user = result.rows[0];
+
+  // Réponse volontairement identique, que l'email existe ou non
+  // -> évite de révéler quels emails sont enregistrés dans le système
+  const genericResponse = {
+    message: 'Si un compte existe avec cet email, un lien de réinitialisation a été généré.'
+  };
+
+  if (!user) {
+    return res.json(genericResponse);
+  }
+
+  // Génère un token aléatoire sécurisé
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const expires = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes
+
+  await db.execute({
+    sql: 'UPDATE users SET reset_token_hash = ?, reset_token_expires = ? WHERE id = ?',
+    args: [tokenHash, expires, user.id]
+  });
+
+  // Version simplifiée : on "envoie" le lien via la console plutôt qu'un vrai email
+  const resetLink = `http://localhost:3000/?resetToken=${rawToken}`;
+  console.log(`\n📧 [SIMULATION EMAIL] Lien de réinitialisation pour ${email} :\n${resetLink}\n`);
+
+  // En dev uniquement : on renvoie aussi le lien dans la réponse pour pouvoir tester sans regarder les logs
+  res.json({ ...genericResponse, devResetLink: resetLink });
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  const { token } = req.body;
+  const newPassword = req.body.newPassword || '';
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ error: 'Token et nouveau mot de passe requis' });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'Le mot de passe doit faire au moins 8 caractères' });
+  }
+
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  const result = await db.execute({
+    sql: 'SELECT * FROM users WHERE reset_token_hash = ?',
+    args: [tokenHash]
+  });
+  const user = result.rows[0];
+
+  if (!user) {
+    return res.status(400).json({ error: 'Lien de réinitialisation invalide' });
+  }
+
+  if (new Date(user.reset_token_expires) < new Date()) {
+    return res.status(400).json({ error: 'Ce lien de réinitialisation a expiré' });
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+  await db.execute({
+    sql: 'UPDATE users SET password_hash = ?, reset_token_hash = NULL, reset_token_expires = NULL WHERE id = ?',
+    args: [passwordHash, user.id]
+  });
+
+  res.json({ message: 'Mot de passe réinitialisé avec succès' });
 });
 
 module.exports = router;
