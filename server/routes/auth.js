@@ -6,14 +6,16 @@ const crypto = require('crypto');
 
 const router = express.Router();
 const SALT_ROUNDS = 10;
+const requireAuth = require('../middleware/auth');
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
+  const name = (req.body.name || '').trim();
   const email = (req.body.email || '').trim().toLowerCase();
   const password = req.body.password || '';
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email et mot de passe requis' });
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'Nom, email et mot de passe requis' });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: 'Le mot de passe doit faire au moins 8 caractères' });
@@ -30,8 +32,8 @@ router.post('/register', async (req, res) => {
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
   const result = await db.execute({
-    sql: 'INSERT INTO users (email, password_hash) VALUES (?, ?)',
-    args: [email, passwordHash]
+    sql: 'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)',
+    args: [name, email, passwordHash]
   });
 
   const token = jwt.sign(
@@ -40,7 +42,7 @@ router.post('/register', async (req, res) => {
     { expiresIn: '7d' }
   );
 
-  res.status(201).json({ token, email });
+  res.status(201).json({ token, name, email });
 });
 
 // POST /api/auth/login
@@ -58,7 +60,6 @@ router.post('/login', async (req, res) => {
   });
   const user = result.rows[0];
 
-  // Message volontairement générique : ne pas révéler si c'est l'email ou le mot de passe qui est faux
   if (!user) {
     return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
   }
@@ -74,7 +75,7 @@ router.post('/login', async (req, res) => {
     { expiresIn: '7d' }
   );
 
-  res.json({ token, email: user.email });
+  res.json({ token, name: user.name, email: user.email });
 });
 
 // POST /api/auth/forgot-password
@@ -150,11 +151,27 @@ router.post('/reset-password', async (req, res) => {
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
   await db.execute({
-    sql: 'UPDATE users SET password_hash = ?, reset_token_hash = NULL, reset_token_expires = NULL WHERE id = ?',
+    sql: 'UPDATE users SET password_hash = ?, reset_token_hash = NULL, reset_token_expires = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
     args: [passwordHash, user.id]
   });
 
   res.json({ message: 'Mot de passe réinitialisé avec succès' });
+});
+
+// PUT /api/auth/profile -> modifier son propre nom (protégé)
+router.put('/profile', requireAuth, async (req, res) => {
+  const name = (req.body.name || '').trim();
+
+  if (!name) {
+    return res.status(400).json({ error: 'Le nom ne peut pas être vide' });
+  }
+
+  await db.execute({
+    sql: 'UPDATE users SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    args: [name, req.userId]
+  });
+
+  res.json({ name });
 });
 
 module.exports = router;

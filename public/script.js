@@ -5,6 +5,7 @@ const errorBox = document.getElementById('error-message');
 const tabLogin = document.getElementById('tab-login');
 const tabRegister = document.getElementById('tab-register');
 const authForm = document.getElementById('auth-form');
+const authName = document.getElementById('auth-name');
 const authEmail = document.getElementById('auth-email');
 const authPassword = document.getElementById('auth-password');
 const togglePasswordBtn = document.getElementById('toggle-password');
@@ -32,6 +33,8 @@ tabLogin.addEventListener('click', () => {
   tabLogin.classList.add('active');
   tabRegister.classList.remove('active');
   authSubmit.textContent = 'Se connecter';
+  authName.style.display = 'none';
+  authName.required = false;
   clearError();
 });
 
@@ -40,6 +43,8 @@ tabRegister.addEventListener('click', () => {
   tabRegister.classList.add('active');
   tabLogin.classList.remove('active');
   authSubmit.textContent = 'S\'inscrire';
+  authName.style.display = 'block';
+  authName.required = true;
   clearError();
 });
 
@@ -61,12 +66,15 @@ authForm.addEventListener('submit', async (event) => {
   const email = authEmail.value.trim();
   const password = authPassword.value;
   const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+  const body = mode === 'register'
+    ? { name: authName.value.trim(), email, password }
+    : { email, password };
 
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify(body)
     });
 
     const data = await res.json();
@@ -77,6 +85,7 @@ authForm.addEventListener('submit', async (event) => {
     }
 
     localStorage.setItem('token', data.token);
+    localStorage.setItem('userName', data.name);
     authForm.reset();
     showAppView();
   } catch (err) {
@@ -87,6 +96,7 @@ authForm.addEventListener('submit', async (event) => {
 // --- Déconnexion ---
 logoutBtn.addEventListener('click', () => {
   localStorage.removeItem('token');
+  localStorage.removeItem('userName');
   taskList.innerHTML = ''; // vide immédiatement, avant même de changer de vue
   showAuthView();
 });
@@ -94,6 +104,7 @@ logoutBtn.addEventListener('click', () => {
 // --- Bascule entre les deux vues ---
 function showAppView() {
   taskList.innerHTML = ''; // sécurité supplémentaire : jamais d'anciennes données visibles
+  document.getElementById('user-name-display').textContent = localStorage.getItem('userName') || '';
   authView.style.display = 'none';
   appView.style.display = 'block';
   fetchTasks();
@@ -240,12 +251,33 @@ async function deleteTask(id, text) {
   }
 }
 
-// --- Point d'entrée : si un token existe déjà, tenter d'aller direct à l'app ---
-if (localStorage.getItem('token')) {
-  showAppView();
-} else {
-  showAuthView();
-}
+document.getElementById('edit-name-btn').addEventListener('click', async () => {
+  const currentName = localStorage.getItem('userName') || '';
+  const newName = prompt('Modifier ton nom :', currentName);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed || trimmed === currentName) return;
+
+  try {
+    clearError();
+    const res = await authFetch('/api/auth/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: trimmed })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError(data.error);
+      return;
+    }
+
+    localStorage.setItem('userName', data.name);
+    document.getElementById('user-name-display').textContent = data.name;
+  } catch (err) {
+    showError('Erreur de connexion au serveur.');
+  }
+});
 
 const forgotView = document.getElementById('forgot-view');
 const resetView = document.getElementById('reset-view');
@@ -328,6 +360,7 @@ resetForm.addEventListener('submit', async (event) => {
 });
 
 // --- Point d'entrée : vérifie s'il y a un token de reset dans l'URL ---
+// --- Si un token existe déjà, tenter d'aller direct à l'app ---
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('resetToken')) {
   hideAllViews();
