@@ -6,6 +6,7 @@ const app = require('../server/index');
 async function getAuthToken() {
   const email = `task-test-${Date.now()}@example.com`;
   const res = await request(app).post('/api/auth/register').send({
+    name: 'Utilisateur Test',
     email,
     password: 'motdepasse123'
   });

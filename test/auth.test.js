@@ -4,6 +4,7 @@ const request = require('supertest');
 const app = require('../server/index');
 
 const testUser = {
+  name: 'Utilisateur Test',
   email: `test-${Date.now()}@example.com`, // email unique à chaque run
   password: 'motdepasse123'
 };
@@ -69,6 +70,7 @@ test('POST /api/auth/reset-password avec un token invalide renvoie 400', async (
 test('Flux complet : forgot-password puis reset-password fonctionne', async () => {
   const email = `reset-test-${Date.now()}@example.com`;
   await request(app).post('/api/auth/register').send({
+    name: 'Utilisateur Test',
     email,
     password: 'ancienmotdepasse123'
   });
@@ -96,4 +98,27 @@ test('Flux complet : forgot-password puis reset-password fonctionne', async () =
     password: 'nouveaumotdepasse123'
   });
   assert.strictEqual(newLogin.status, 200);
+});
+
+test('PUT /api/auth/profile modifie le nom (protégé par auth)', async () => {
+  const email = `profile-test-${Date.now()}@example.com`;
+  const register = await request(app).post('/api/auth/register').send({
+    name: 'Nom Original',
+    email,
+    password: 'motdepasse123'
+  });
+  const token = register.body.token;
+
+  const res = await request(app)
+    .put('/api/auth/profile')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ name: 'Nouveau Nom' });
+
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.name, 'Nouveau Nom');
+});
+
+test('PUT /api/auth/profile sans token renvoie 401', async () => {
+  const res = await request(app).put('/api/auth/profile').send({ name: 'x' });
+  assert.strictEqual(res.status, 401);
 });

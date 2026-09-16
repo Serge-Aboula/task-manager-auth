@@ -24,7 +24,7 @@ router.post('/', async (req, res) => {
   }
 
   const result = await db.execute({
-    sql: 'INSERT INTO tasks (user_id, text) VALUES (?, ?)',
+    sql: 'INSERT INTO tasks (user_id, text, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
     args: [req.userId, text]
   });
 
@@ -59,7 +59,7 @@ router.put('/:id', async (req, res) => {
   }
 
   await db.execute({
-    sql: 'UPDATE tasks SET text = ?, done = ? WHERE id = ?',
+    sql: 'UPDATE tasks SET text = ?, done = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
     args: [text, done, id]
   });
 
