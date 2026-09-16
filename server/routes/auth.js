@@ -113,7 +113,8 @@ router.post('/forgot-password', async (req, res) => {
   });
 
   // Version simplifiée : on "envoie" le lien via la console plutôt qu'un vrai email
-  const resetLink = `http://localhost:3000/?resetToken=${rawToken}`;
+  const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+  const resetLink = `${baseUrl}/?resetToken=${rawToken}`;
   console.log(`\n📧 [SIMULATION EMAIL] Lien de réinitialisation pour ${email} :\n${resetLink}\n`);
 
   // En dev uniquement : on renvoie aussi le lien dans la réponse pour pouvoir tester sans regarder les logs
