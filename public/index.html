@@ -24,6 +24,10 @@
       <input type="password" id="auth-password" placeholder="Mot de passe (8 caractères min.)" required minlength="8">
       <button type="button" id="toggle-password" aria-label="Afficher le mot de passe">👁️</button>
     </div>
+    <label class="checkbox-label" id="remember-me-wrapper">
+      <input type="checkbox" id="remember-me" checked>
+      Se souvenir de moi
+    </label>
     <button type="submit" id="auth-submit">Se connecter</button>
   </form>
 
@@ -44,8 +48,10 @@
   <h1>Réinitialiser le mot de passe</h1>
   <form id="reset-form">
     <input type="password" id="reset-new-password" placeholder="Nouveau mot de passe (8 caractères min.)" required minlength="8">
+    <button type="button" id="toggle-reset-password" aria-label="Afficher le mot de passe">👁️</button>
     <button type="submit">Réinitialiser</button>
   </form>
+  <button type="button" id="back-to-login-from-reset-btn" class="link-btn">Retour à la connexion</button>
 </section>
 
   <!-- Vue application (visible uniquement une fois connecté) -->
