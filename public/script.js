@@ -35,6 +35,8 @@ tabLogin.addEventListener('click', () => {
   authSubmit.textContent = 'Se connecter';
   authName.style.display = 'none';
   authName.required = false;
+  document.getElementById('remember-me-wrapper').style.display = 'flex';
+  forgotPasswordLink.style.display = 'block';
   clearError();
 });
 
@@ -45,6 +47,8 @@ tabRegister.addEventListener('click', () => {
   authSubmit.textContent = 'S\'inscrire';
   authName.style.display = 'block';
   authName.required = true;
+  document.getElementById('remember-me-wrapper').style.display = 'none';
+  forgotPasswordLink.style.display = 'none';
   clearError();
 });
 
@@ -65,6 +69,7 @@ authForm.addEventListener('submit', async (event) => {
 
   const email = authEmail.value.trim();
   const password = authPassword.value;
+  const remember = document.getElementById('remember-me').checked;
   const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
   const body = mode === 'register'
     ? { name: authName.value.trim(), email, password }
@@ -84,19 +89,18 @@ authForm.addEventListener('submit', async (event) => {
       return;
     }
 
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('userName', data.name);
+    saveSession(data.token, data.name, remember);
     authForm.reset();
     showAppView();
   } catch (err) {
+    console.error('Erreur de connexion:', err);
     showError('Erreur de connexion au serveur.');
   }
 });
 
 // --- Déconnexion ---
 logoutBtn.addEventListener('click', () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('userName');
+  clearSession();
   taskList.innerHTML = ''; // vide immédiatement, avant même de changer de vue
   showAuthView();
 });
@@ -104,7 +108,7 @@ logoutBtn.addEventListener('click', () => {
 // --- Bascule entre les deux vues ---
 function showAppView() {
   taskList.innerHTML = ''; // sécurité supplémentaire : jamais d'anciennes données visibles
-  document.getElementById('user-name-display').textContent = localStorage.getItem('userName') || '';
+  document.getElementById('user-name-display').textContent = getUserName() || '';
   authView.style.display = 'none';
   appView.style.display = 'block';
   fetchTasks();
@@ -117,7 +121,7 @@ function showAuthView() {
 
 // --- Requête authentifiée : ajoute automatiquement le header Authorization ---
 function authFetch(url, options = {}) {
-  const token = localStorage.getItem('token');
+  const token = getToken();
   return fetch(url, {
     ...options,
     headers: {
@@ -134,7 +138,7 @@ async function fetchTasks() {
     const res = await authFetch('/api/tasks');
     if (res.status === 401) {
       // Token invalide/expiré -> retour à l'écran de connexion
-      localStorage.removeItem('token');
+      clearSession();
       showAuthView();
       return;
     }
@@ -252,7 +256,7 @@ async function deleteTask(id, text) {
 }
 
 document.getElementById('edit-name-btn').addEventListener('click', async () => {
-  const currentName = localStorage.getItem('userName') || '';
+  const currentName = getUserName() || '';
   const newName = prompt('Modifier ton nom :', currentName);
   if (newName === null) return;
   const trimmed = newName.trim();
@@ -272,7 +276,8 @@ document.getElementById('edit-name-btn').addEventListener('click', async () => {
       return;
     }
 
-    localStorage.setItem('userName', data.name);
+    const storageUsed = localStorage.getItem('token') ? localStorage : sessionStorage;
+    storageUsed.setItem('userName', data.name);
     document.getElementById('user-name-display').textContent = data.name;
   } catch (err) {
     showError('Erreur de connexion au serveur.');
@@ -359,13 +364,48 @@ resetForm.addEventListener('submit', async (event) => {
   }
 });
 
+function saveSession(token, name, remember) {
+  const storage = remember ? localStorage : sessionStorage;
+  storage.setItem('token', token);
+  storage.setItem('userName', name);
+}
+
+function getToken() {
+  return localStorage.getItem('token') || sessionStorage.getItem('token');
+}
+
+function getUserName() {
+  return localStorage.getItem('userName') || sessionStorage.getItem('userName');
+}
+
+function clearSession() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('userName');
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('userName');
+}
+
+const toggleResetPasswordBtn = document.getElementById('toggle-reset-password');
+
+toggleResetPasswordBtn.addEventListener('click', () => {
+  const isPassword = resetNewPassword.type === 'password';
+  resetNewPassword.type = isPassword ? 'text' : 'password';
+  toggleResetPasswordBtn.textContent = isPassword ? '🙈' : '👁️';
+});
+
+document.getElementById('back-to-login-from-reset-btn').addEventListener('click', () => {
+  window.history.replaceState({}, '', '/');
+  hideAllViews();
+  showAuthView();
+});
+
 // --- Point d'entrée : vérifie s'il y a un token de reset dans l'URL ---
 // --- Si un token existe déjà, tenter d'aller direct à l'app ---
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('resetToken')) {
   hideAllViews();
   resetView.style.display = 'block';
-} else if (localStorage.getItem('token')) {
+} else if (getToken()) {
   showAppView();
 } else {
   showAuthView();
