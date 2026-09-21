@@ -48,7 +48,9 @@ test('GET /api/tasks avec un token valide renvoie 200', async () => {
     .set('Authorization', `Bearer ${token}`);
 
   assert.strictEqual(res.status, 200);
-  assert.ok(Array.isArray(res.body));
+  assert.ok(Array.isArray(res.body.tasks));
+  assert.ok(res.body.pagination);
+  assert.strictEqual(res.body.pagination.page, 1);
 });
 
 test('POST /api/auth/forgot-password renvoie toujours un message générique', async () => {
