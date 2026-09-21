@@ -9,11 +9,30 @@ router.use(requireAuth);
 
 // GET /api/tasks -> liste uniquement les tâches de l'utilisateur connecté
 router.get('/', async (req, res) => {
-  const result = await db.execute({
-    sql: 'SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC',
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+  const offset = (page - 1) * limit;
+
+  const tasks = await db.execute({
+    sql: 'SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+    args: [req.userId, limit, offset]
+  });
+
+  const countResult = await db.execute({
+    sql: 'SELECT COUNT(*) as total FROM tasks WHERE user_id = ?',
     args: [req.userId]
   });
-  res.json(result.rows);
+  const total = countResult.rows[0].total;
+
+  res.json({
+    tasks: tasks.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    }
+  });
 });
 
 // POST /api/tasks -> crée une tâche pour l'utilisateur connecté

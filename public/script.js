@@ -15,6 +15,11 @@ const logoutBtn = document.getElementById('logout-btn');
 const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('task-input');
 const taskList = document.getElementById('task-list');
+const paginationControls = document.getElementById('pagination-controls');
+const prevPageBtn = document.getElementById('prev-page-btn');
+const nextPageBtn = document.getElementById('next-page-btn');
+const pageIndicator = document.getElementById('page-indicator');
+let currentPage = 1;
 
 let mode = 'login'; // ou 'register'
 
@@ -132,20 +137,23 @@ function authFetch(url, options = {}) {
 }
 
 // --- Gestion des tâches (protégées) ---
-async function fetchTasks() {
+async function fetchTasks(page = 1) {
   try {
     clearError();
-    const res = await authFetch('/api/tasks');
+    const res = await authFetch(`/api/tasks?page=${page}&limit=10`);
     if (res.status === 401) {
-      // Token invalide/expiré -> retour à l'écran de connexion
       clearSession();
       showAuthView();
       return;
     }
     if (!res.ok) throw new Error();
-    const tasks = await res.json();
-    renderTasks(tasks);
+
+    const data = await res.json();
+    currentPage = data.pagination.page;
+    renderTasks(data.tasks);
+    renderPagination(data.pagination);
   } catch (err) {
+    console.error('Erreur de connexion:', err);
     showError('Erreur de connexion au serveur.');
   }
 }
@@ -198,7 +206,7 @@ async function updateTaskText(id, text) {
       body: JSON.stringify({ text })
     });
     if (!res.ok) throw new Error();
-    fetchTasks();
+    fetchTasks(currentPage);
   } catch (err) {
     showError('Impossible de modifier cette tâche.');
   }
@@ -219,7 +227,7 @@ taskForm.addEventListener('submit', async (event) => {
     });
     if (res.ok) {
       taskInput.value = '';
-      fetchTasks();
+      fetchTasks(1); // retour en page 1 pour voir la tâche fraîchement créée
     } else {
       const error = await res.json();
       showError(error.error);
@@ -236,7 +244,7 @@ async function toggleDone(id, done) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ done })
     });
-    fetchTasks();
+    fetchTasks(currentPage);
   } catch (err) {
     showError('Impossible de mettre à jour cette tâche.');
   }
@@ -249,7 +257,7 @@ async function deleteTask(id, text) {
   try {
     clearError();
     await authFetch(`/api/tasks/${id}`, { method: 'DELETE' });
-    fetchTasks();
+    fetchTasks(currentPage);
   } catch (err) {
     showError('Impossible de supprimer cette tâche.');
   }
@@ -397,6 +405,35 @@ document.getElementById('back-to-login-from-reset-btn').addEventListener('click'
   window.history.replaceState({}, '', '/');
   hideAllViews();
   showAuthView();
+});
+
+function renderPagination(pagination) {
+  const { page, totalPages, total } = pagination;
+
+  if (total === 0) {
+    paginationControls.style.display = 'none';
+    return;
+  }
+
+  // Si la page courante n'existe plus (ex: dernière tâche d'une page supprimée),
+  // on se rabat automatiquement sur la dernière page valide
+  if (page > totalPages) {
+    fetchTasks(totalPages);
+    return;
+  }
+
+  paginationControls.style.display = 'flex';
+  pageIndicator.textContent = `Page ${page} sur ${totalPages} (${total} tâche${total > 1 ? 's' : ''})`;
+  prevPageBtn.disabled = page <= 1;
+  nextPageBtn.disabled = page >= totalPages;
+}
+
+prevPageBtn.addEventListener('click', () => {
+  if (currentPage > 1) fetchTasks(currentPage - 1);
+});
+
+nextPageBtn.addEventListener('click', () => {
+  fetchTasks(currentPage + 1);
 });
 
 // --- Point d'entrée : vérifie s'il y a un token de reset dans l'URL ---
