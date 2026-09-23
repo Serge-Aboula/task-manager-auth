@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
+    "lint": "eslint .",
     "pretest": "node -e \"try { require('fs').unlinkSync('test.db') } catch(e) {}\"",
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 test/auth.test.js test/tasks.test.js"
   },
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
+    "eslint": "^8.57.1",
     "nodemon": "^3.1.14",
     "supertest": "^7.2.2"
   }

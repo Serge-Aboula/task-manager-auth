@@ -21,6 +21,9 @@ jobs:
 
       - name: Installer les dépendances
         run: npm install
+      
+      - name: Vérifier le code (ESLint)
+        run: npm run lint
 
       - name: Lancer les tests
         env:
