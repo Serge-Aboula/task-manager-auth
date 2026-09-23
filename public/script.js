@@ -188,7 +188,7 @@ function renderTasks(tasks) {
   });
 }
 
-function editTask(id, currentText, _span) {
+function editTask(id, currentText) {
   const newText = prompt('Modifier la tâche :', currentText);
   if (newText === null) return; // annulé
   const trimmed = newText.trim();
