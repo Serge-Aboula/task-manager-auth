@@ -39,3 +39,42 @@ test('PUT /api/tasks/:id modifie uniquement le texte sans toucher au statut done
   assert.strictEqual(res.body.text, 'Texte modifié');
   assert.strictEqual(res.body.done, 1); // le "done" mis précédemment doit être conservé
 });
+
+test('Un utilisateur ne peut pas accéder aux tâches d\'un autre utilisateur', async () => {
+  // Utilisateur A crée une tâche
+  const tokenA = await getAuthToken();
+  const taskA = await request(app)
+    .post('/api/tasks')
+    .set('Authorization', `Bearer ${tokenA}`)
+    .send({ text: 'Tâche privée de A' });
+  const taskId = taskA.body.id;
+
+  // Utilisateur B tente d'accéder aux tâches
+  const tokenB = await getAuthToken();
+
+  // B ne voit pas la tâche de A dans sa liste
+  const listB = await request(app)
+    .get('/api/tasks')
+    .set('Authorization', `Bearer ${tokenB}`);
+  const bSeesTaskA = listB.body.tasks.some(t => t.id === taskId);
+  assert.strictEqual(bSeesTaskA, false);
+
+  // B ne peut pas modifier la tâche de A (404, pas 200)
+  const updateAttempt = await request(app)
+    .put(`/api/tasks/${taskId}`)
+    .set('Authorization', `Bearer ${tokenB}`)
+    .send({ text: 'Piraté par B' });
+  assert.strictEqual(updateAttempt.status, 404);
+
+  // B ne peut pas supprimer la tâche de A
+  await request(app)
+    .delete(`/api/tasks/${taskId}`)
+    .set('Authorization', `Bearer ${tokenB}`);
+
+  // Vérifie que la tâche existe toujours pour A (donc pas supprimée par B)
+  const listA = await request(app)
+    .get('/api/tasks')
+    .set('Authorization', `Bearer ${tokenA}`);
+  const stillExists = listA.body.tasks.some(t => t.id === taskId);
+  assert.strictEqual(stillExists, true);
+});

@@ -2,6 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert');
 const request = require('supertest');
 const app = require('../server/index');
+const express = require('express');
+const rateLimit = require('express-rate-limit');
 
 const testUser = {
   name: 'Utilisateur Test',
@@ -123,4 +125,27 @@ test('PUT /api/auth/profile modifie le nom (protégé par auth)', async () => {
 test('PUT /api/auth/profile sans token renvoie 401', async () => {
   const res = await request(app).put('/api/auth/profile').send({ name: 'x' });
   assert.strictEqual(res.status, 401);
+});
+
+test('Le rate limiting bloque après trop de tentatives (test isolé)', async () => {
+  // On construit une mini-app isolée avec une limite volontairement basse (3),
+  // pour tester le MÉCANISME du rate limiting indépendamment de la vraie config (1000 en test)
+  const testApp = express();
+  testApp.use(express.json());
+  const strictLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 3,
+    message: { error: 'Trop de tentatives. Réessaie dans quelques minutes.' }
+  });
+  testApp.post('/test-limit', strictLimiter, (req, res) => res.json({ ok: true }));
+
+  // 3 premières requêtes passent
+  for (let i = 0; i < 3; i++) {
+    const res = await request(testApp).post('/test-limit');
+    assert.strictEqual(res.status, 200);
+  }
+
+  // La 4e est bloquée
+  const blocked = await request(testApp).post('/test-limit');
+  assert.strictEqual(blocked.status, 429);
 });
