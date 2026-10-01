@@ -8,6 +8,20 @@ const router = express.Router();
 const SALT_ROUNDS = 10;
 const requireAuth = require('../middleware/auth');
 
+const rateLimit = require('express-rate-limit');
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'test' ? 1000 : 5, // 5 tentatives max par IP dans cette fenêtre et limite très haute en test, pour ne pas gêner les tests automatisés
+  message: { error: 'Trop de tentatives. Réessaie dans quelques minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   const name = (req.body.name || '').trim();
@@ -16,6 +30,9 @@ router.post('/register', async (req, res) => {
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Nom, email et mot de passe requis' });
+  }
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ error: 'Format d\'email invalide' });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: 'Le mot de passe doit faire au moins 8 caractères' });
@@ -46,7 +63,7 @@ router.post('/register', async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const email = (req.body.email || '').trim().toLowerCase();
   const password = req.body.password || '';
 
@@ -79,7 +96,7 @@ router.post('/login', async (req, res) => {
 });
 
 // POST /api/auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', authLimiter, async (req, res) => {
   const email = (req.body.email || '').trim().toLowerCase();
 
   if (!email) {
