@@ -72,3 +72,40 @@ test("Un utilisateur ne peut pas accéder aux tâches d'un autre utilisateur", a
   const stillExists = listA.body.tasks.some((t) => t.id === taskId);
   assert.strictEqual(stillExists, true);
 });
+
+test('GET /api/tasks avec filter=pending ne renvoie que les tâches non terminées', async () => {
+  const token = await getAuthToken();
+
+  await request(app)
+    .post('/api/tasks')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ text: 'Tâche en attente' });
+
+  const task2 = await request(app)
+    .post('/api/tasks')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ text: 'Tâche terminée' });
+
+  await request(app)
+    .put(`/api/tasks/${task2.body.id}`)
+    .set('Authorization', `Bearer ${token}`)
+    .send({ done: true });
+
+  const res = await request(app)
+    .get('/api/tasks?filter=pending')
+    .set('Authorization', `Bearer ${token}`)
+    .send();
+
+  const texts = res.body.tasks.map((t) => t.text);
+  assert.ok(texts.includes('Tâche en attente'));
+  assert.ok(!texts.includes('Tâche terminée'));
+});
+
+test('GET /api/tasks avec un paramètre sort invalide retombe sur le tri par défaut', async () => {
+  const token = await getAuthToken();
+  const res = await request(app)
+    .get('/api/tasks?sort=DROP TABLE tasks;--')
+    .set('Authorization', `Bearer ${token}`);
+
+  assert.strictEqual(res.status, 200); // ne plante pas, ignore simplement la valeur invalide
+});

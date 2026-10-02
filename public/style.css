@@ -162,3 +162,24 @@ button[type='submit'] {
   font-size: 0.9em;
   cursor: pointer;
 }
+
+.task-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.9em;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.task-controls select {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#pending-counter {
+  color: #555;
+  font-weight: 500;
+}

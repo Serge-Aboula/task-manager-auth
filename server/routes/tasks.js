@@ -13,16 +13,36 @@ router.get('/', async (req, res) => {
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
   const offset = (page - 1) * limit;
 
+  const sortOptions = {
+    newest: 'created_at DESC',
+    oldest: 'created_at ASC',
+    alpha: 'text ASC'
+  };
+  const sort = sortOptions[req.query.sort] || sortOptions.newest;
+
+  const filterOptions = {
+    all: '',
+    done: 'AND done = 1',
+    pending: 'AND done = 0'
+  };
+  const filter = filterOptions[req.query.filter] || '';
+
   const tasks = await db.execute({
-    sql: 'SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+    sql: `SELECT * FROM tasks WHERE user_id = ? ${filter} ORDER BY ${sort} LIMIT ? OFFSET ?`,
     args: [req.userId, limit, offset]
   });
 
   const countResult = await db.execute({
-    sql: 'SELECT COUNT(*) as total FROM tasks WHERE user_id = ?',
+    sql: `SELECT COUNT(*) as total FROM tasks WHERE user_id = ? ${filter}`,
     args: [req.userId]
   });
   const total = countResult.rows[0].total;
+
+  const pendingCountResult = await db.execute({
+    sql: 'SELECT COUNT(*) as pending FROM tasks WHERE user_id = ? AND done = 0',
+    args: [req.userId]
+  });
+  const pendingCount = pendingCountResult.rows[0].pending;
 
   res.json({
     tasks: tasks.rows,
@@ -31,7 +51,8 @@ router.get('/', async (req, res) => {
       limit,
       total,
       totalPages: Math.ceil(total / limit)
-    }
+    },
+    pendingCount
   });
 });
 
