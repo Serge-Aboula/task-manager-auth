@@ -21,7 +21,10 @@ jobs:
 
       - name: Installer les dépendances
         run: npm install
-      
+
+      - name: Vérifier le formatage (Prettier)
+        run: npm run format:check
+
       - name: Vérifier le code (ESLint)
         run: npm run lint
 

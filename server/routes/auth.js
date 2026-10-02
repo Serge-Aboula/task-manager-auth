@@ -32,7 +32,7 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Nom, email et mot de passe requis' });
   }
   if (!isValidEmail(email)) {
-    return res.status(400).json({ error: 'Format d\'email invalide' });
+    return res.status(400).json({ error: "Format d'email invalide" });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: 'Le mot de passe doit faire au moins 8 caractères' });
@@ -53,11 +53,9 @@ router.post('/register', async (req, res) => {
     args: [name, email, passwordHash]
   });
 
-  const token = jwt.sign(
-    { userId: Number(result.lastInsertRowid) },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  );
+  const token = jwt.sign({ userId: Number(result.lastInsertRowid) }, process.env.JWT_SECRET, {
+    expiresIn: '7d'
+  });
 
   res.status(201).json({ token, name, email });
 });
@@ -86,11 +84,7 @@ router.post('/login', authLimiter, async (req, res) => {
     return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
   }
 
-  const token = jwt.sign(
-    { userId: user.id },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  );
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
   res.json({ token, name: user.name, email: user.email });
 });

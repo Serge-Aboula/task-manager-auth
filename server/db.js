@@ -46,13 +46,13 @@ async function initDb() {
   });
 
   // Comble updated_at pour les lignes déjà existantes avant l'ajout de la colonne
-  await db.execute("UPDATE users SET updated_at = created_at WHERE updated_at IS NULL");
-  await db.execute("UPDATE tasks SET updated_at = created_at WHERE updated_at IS NULL");
+  await db.execute('UPDATE users SET updated_at = created_at WHERE updated_at IS NULL');
+  await db.execute('UPDATE tasks SET updated_at = created_at WHERE updated_at IS NULL');
 
   // Migration : ajoute les colonnes de reset si la table existait déjà sans elles
   async function migrateColumns(table, columnsToAdd) {
     const columns = await db.execute(`PRAGMA table_info(${table})`);
-    const existingNames = columns.rows.map(col => col.name);
+    const existingNames = columns.rows.map((col) => col.name);
 
     for (const [columnName, columnDef] of Object.entries(columnsToAdd)) {
       if (!existingNames.includes(columnName)) {

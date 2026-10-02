@@ -45,9 +45,7 @@ test('GET /api/tasks avec un token valide renvoie 200', async () => {
   const login = await request(app).post('/api/auth/login').send(testUser);
   const token = login.body.token;
 
-  const res = await request(app)
-    .get('/api/tasks')
-    .set('Authorization', `Bearer ${token}`);
+  const res = await request(app).get('/api/tasks').set('Authorization', `Bearer ${token}`);
 
   assert.strictEqual(res.status, 200);
   assert.ok(Array.isArray(res.body.tasks));

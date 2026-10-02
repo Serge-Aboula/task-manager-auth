@@ -7,6 +7,8 @@
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "pretest": "node -e \"try { require('fs').unlinkSync('test.db') } catch(e) {}\"",
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 test/auth.test.js test/tasks.test.js"
   },
@@ -25,7 +27,9 @@
   "devDependencies": {
     "cross-env": "^10.1.0",
     "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.8",
     "nodemon": "^3.1.14",
+    "prettier": "^3.9.9",
     "supertest": "^7.2.2"
   }
 }
