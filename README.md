@@ -50,14 +50,14 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ## Scripts disponibles
 
-| Commande | Description |
-|---|---|
-| `npm run dev` | Lance le serveur en mode développement (rechargement auto) |
-| `npm start` | Lance le serveur en mode production |
-| `npm test` | Lance la suite de tests |
-| `npm run lint` | Vérifie la qualité du code |
-| `npm run format` | Formate le code automatiquement |
-| `npm run format:check` | Vérifie le formatage sans modifier les fichiers |
+| Commande               | Description                                                |
+| ---------------------- | ---------------------------------------------------------- |
+| `npm run dev`          | Lance le serveur en mode développement (rechargement auto) |
+| `npm start`            | Lance le serveur en mode production                        |
+| `npm test`             | Lance la suite de tests                                    |
+| `npm run lint`         | Vérifie la qualité du code                                 |
+| `npm run format`       | Formate le code automatiquement                            |
+| `npm run format:check` | Vérifie le formatage sans modifier les fichiers            |
 
 ## Tests
 
