@@ -41,7 +41,8 @@ h1 {
   color: white;
 }
 
-#auth-form, #task-form {
+#auth-form,
+#task-form {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -62,7 +63,7 @@ input {
   flex: 1;
 }
 
-button[type="submit"] {
+button[type='submit'] {
   padding: 10px 16px;
   background-color: #2563eb;
   color: white;
@@ -98,7 +99,7 @@ button[type="submit"] {
   padding: 10px 14px;
   margin-bottom: 8px;
   border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 #task-list li span {

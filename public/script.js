@@ -49,7 +49,7 @@ tabRegister.addEventListener('click', () => {
   mode = 'register';
   tabRegister.classList.add('active');
   tabLogin.classList.remove('active');
-  authSubmit.textContent = 'S\'inscrire';
+  authSubmit.textContent = "S'inscrire";
   authName.style.display = 'block';
   authName.required = true;
   document.getElementById('remember-me-wrapper').style.display = 'none';
@@ -76,9 +76,8 @@ authForm.addEventListener('submit', async (event) => {
   const password = authPassword.value;
   const remember = document.getElementById('remember-me').checked;
   const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-  const body = mode === 'register'
-    ? { name: authName.value.trim(), email, password }
-    : { email, password };
+  const body =
+    mode === 'register' ? { name: authName.value.trim(), email, password } : { email, password };
 
   try {
     const res = await fetch(endpoint, {
@@ -131,7 +130,7 @@ function authFetch(url, options = {}) {
     ...options,
     headers: {
       ...options.headers,
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`
     }
   });
 }
@@ -160,7 +159,7 @@ async function fetchTasks(page = 1) {
 
 function renderTasks(tasks) {
   taskList.innerHTML = '';
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     const li = document.createElement('li');
 
     const checkbox = document.createElement('input');
@@ -175,7 +174,7 @@ function renderTasks(tasks) {
     const editBtn = document.createElement('button');
     editBtn.textContent = '✏️';
     editBtn.addEventListener('click', () => editTask(task.id, task.text, span));
-    
+
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = '🗑️';
     deleteBtn.addEventListener('click', () => deleteTask(task.id, task.text));

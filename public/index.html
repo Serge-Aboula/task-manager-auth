@@ -1,80 +1,105 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Task Manager</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div id="error-message" style="display: none;"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="error-message" style="display: none"></div>
 
-  <!-- Vue authentification (inscription/connexion) -->
-  <section id="auth-view">
-  <h1>Gestionnaire de Tâches</h1>
+    <!-- Vue authentification (inscription/connexion) -->
+    <section id="auth-view">
+      <h1>Gestionnaire de Tâches</h1>
 
-  <div class="tabs">
-    <button id="tab-login" class="tab active">Connexion</button>
-    <button id="tab-register" class="tab">Inscription</button>
-  </div>
+      <div class="tabs">
+        <button id="tab-login" class="tab active">Connexion</button>
+        <button id="tab-register" class="tab">Inscription</button>
+      </div>
 
-  <form id="auth-form">
-    <input type="text" id="auth-name" placeholder="Nom" style="display: none;">
-    <input type="email" id="auth-email" placeholder="Email" required>
-    <div class="password-field">
-      <input type="password" id="auth-password" placeholder="Mot de passe (8 caractères min.)" required minlength="8">
-      <button type="button" id="toggle-password" aria-label="Afficher le mot de passe">👁️</button>
-    </div>
-    <label class="checkbox-label" id="remember-me-wrapper">
-      <input type="checkbox" id="remember-me" checked>
-      Se souvenir de moi
-    </label>
-    <button type="submit" id="auth-submit">Se connecter</button>
-  </form>
+      <form id="auth-form">
+        <input type="text" id="auth-name" placeholder="Nom" style="display: none" />
+        <input type="email" id="auth-email" placeholder="Email" required />
+        <div class="password-field">
+          <input
+            type="password"
+            id="auth-password"
+            placeholder="Mot de passe (8 caractères min.)"
+            required
+            minlength="8"
+          />
+          <button type="button" id="toggle-password" aria-label="Afficher le mot de passe">
+            👁️
+          </button>
+        </div>
+        <label class="checkbox-label" id="remember-me-wrapper">
+          <input type="checkbox" id="remember-me" checked />
+          Se souvenir de moi
+        </label>
+        <button type="submit" id="auth-submit">Se connecter</button>
+      </form>
 
-  <button type="button" id="forgot-password-link" class="link-btn">Mot de passe oublié ?</button>
-</section>
+      <button type="button" id="forgot-password-link" class="link-btn">
+        Mot de passe oublié ?
+      </button>
+    </section>
 
-<section id="forgot-view" style="display: none;">
-  <h1>Mot de passe oublié</h1>
-  <form id="forgot-form">
-    <input type="email" id="forgot-email" placeholder="Email" required>
-    <button type="submit">Envoyer le lien</button>
-  </form>
-  <p id="forgot-result" style="display: none;"></p>
-  <button type="button" id="back-to-login-btn" class="link-btn">Retour à la connexion</button>
-</section>
+    <section id="forgot-view" style="display: none">
+      <h1>Mot de passe oublié</h1>
+      <form id="forgot-form">
+        <input type="email" id="forgot-email" placeholder="Email" required />
+        <button type="submit">Envoyer le lien</button>
+      </form>
+      <p id="forgot-result" style="display: none"></p>
+      <button type="button" id="back-to-login-btn" class="link-btn">Retour à la connexion</button>
+    </section>
 
-<section id="reset-view" style="display: none;">
-  <h1>Réinitialiser le mot de passe</h1>
-  <form id="reset-form">
-    <input type="password" id="reset-new-password" placeholder="Nouveau mot de passe (8 caractères min.)" required minlength="8">
-    <button type="button" id="toggle-reset-password" aria-label="Afficher le mot de passe">👁️</button>
-    <button type="submit">Réinitialiser</button>
-  </form>
-  <button type="button" id="back-to-login-from-reset-btn" class="link-btn">Retour à la connexion</button>
-</section>
+    <section id="reset-view" style="display: none">
+      <h1>Réinitialiser le mot de passe</h1>
+      <form id="reset-form">
+        <input
+          type="password"
+          id="reset-new-password"
+          placeholder="Nouveau mot de passe (8 caractères min.)"
+          required
+          minlength="8"
+        />
+        <button type="button" id="toggle-reset-password" aria-label="Afficher le mot de passe">
+          👁️
+        </button>
+        <button type="submit">Réinitialiser</button>
+      </form>
+      <button type="button" id="back-to-login-from-reset-btn" class="link-btn">
+        Retour à la connexion
+      </button>
+    </section>
 
-  <!-- Vue application (visible uniquement une fois connecté) -->
-  <section id="app-view" style="display: none;">
-    <div class="app-header">
-      <h1>Bienvenue, <span id="user-name-display"></span><button id="edit-name-btn" class="link-btn" style="display: inline; font-size: 0.6em;">✏️</button></h1>
-      <h2>Mes Tâches</h2>
-      <button id="logout-btn">Déconnexion</button>
-    </div>
+    <!-- Vue application (visible uniquement une fois connecté) -->
+    <section id="app-view" style="display: none">
+      <div class="app-header">
+        <h1>
+          Bienvenue, <span id="user-name-display"></span
+          ><button id="edit-name-btn" class="link-btn" style="display: inline; font-size: 0.6em">
+            ✏️
+          </button>
+        </h1>
+        <h2>Mes Tâches</h2>
+        <button id="logout-btn">Déconnexion</button>
+      </div>
 
-    <form id="task-form">
-      <input type="text" id="task-input" placeholder="Nouvelle tâche..." required>
-      <button type="submit">Ajouter</button>
-    </form>
+      <form id="task-form">
+        <input type="text" id="task-input" placeholder="Nouvelle tâche..." required />
+        <button type="submit">Ajouter</button>
+      </form>
 
-    <ul id="task-list"></ul>
-    <div id="pagination-controls" style="display: none;">
-      <button id="prev-page-btn">Précédent</button>
-      &emsp;<span id="page-indicator"></span>&emsp;
-      <button id="next-page-btn">Suivant</button>
-    </div>
-  </section>
+      <ul id="task-list"></ul>
+      <div id="pagination-controls" style="display: none">
+        <button id="prev-page-btn">Précédent</button>
+        &emsp;<span id="page-indicator"></span>&emsp;
+        <button id="next-page-btn">Suivant</button>
+      </div>
+    </section>
 
-  <script src="script.js"></script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>
