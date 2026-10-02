@@ -25,6 +25,7 @@ const forgotEmail = document.getElementById('forgot-email');
 const forgotResult = document.getElementById('forgot-result');
 const resetForm = document.getElementById('reset-form');
 const resetNewPassword = document.getElementById('reset-new-password');
+const passwordStrengthEl = document.getElementById('password-strength');
 
 const paginationControls = document.getElementById('pagination-controls');
 const prevPageBtn = document.getElementById('prev-page-btn');
@@ -112,6 +113,7 @@ authForm.addEventListener('submit', async (event) => {
 
     saveSession(data.token, data.name, remember);
     authForm.reset();
+    showToast(mode === 'login' ? 'Connecté(e) !' : 'Compte créé !');
     showAppView();
   } catch (err) {
     console.error('Erreur de connexion:', err);
@@ -124,10 +126,12 @@ logoutBtn.addEventListener('click', () => {
   clearSession();
   taskList.innerHTML = ''; // vide immédiatement, avant même de changer de vue
   showAuthView();
+  showToast('Déconnecté(e) !');
 });
 
 // --- Bascule entre les deux vues ---
 function showAppView() {
+  hideAllViews();
   taskList.innerHTML = ''; // sécurité supplémentaire : jamais d'anciennes données visibles
   document.getElementById('user-name-display').textContent = getUserName() || '';
   authView.style.display = 'none';
@@ -136,7 +140,7 @@ function showAppView() {
 }
 
 function showAuthView() {
-  appView.style.display = 'none';
+  hideAllViews();
   authView.style.display = 'block';
 }
 
@@ -154,8 +158,12 @@ function authFetch(url, options = {}) {
 
 // --- Gestion des tâches (protégées) ---
 async function fetchTasks(page = 1) {
+  const spinner = document.getElementById('loading-spinner');
   try {
     clearError();
+    spinner.style.display = 'block';
+    taskList.style.display = 'none';
+
     const res = await authFetch(
       `/api/tasks?page=${page}&limit=10&filter=${currentFilter}&sort=${currentSort}`
     );
@@ -174,6 +182,9 @@ async function fetchTasks(page = 1) {
   } catch (err) {
     console.error('Erreur de connexion:', err);
     showError('Erreur de connexion au serveur.');
+  } finally {
+    spinner.style.display = 'none';
+    taskList.style.display = 'block';
   }
 }
 
@@ -312,6 +323,7 @@ document.getElementById('edit-name-btn').addEventListener('click', async () => {
 });
 
 function hideAllViews() {
+  clearError();
   authView.style.display = 'none';
   appView.style.display = 'none';
   forgotView.style.display = 'none';
@@ -372,7 +384,8 @@ resetForm.addEventListener('submit', async (event) => {
       return;
     }
 
-    alert('Mot de passe réinitialisé ! Tu peux maintenant te connecter.');
+    //alert('Mot de passe réinitialisé ! Tu peux maintenant te connecter.');
+    showToast('Mot de passe réinitialisé ! Tu peux maintenant te connecter.');
     window.history.replaceState({}, '', '/'); // nettoie l'URL du token
     hideAllViews();
     showAuthView();
@@ -458,6 +471,42 @@ sortSelect.addEventListener('change', () => {
   currentSort = sortSelect.value;
   fetchTasks(1);
 });
+
+function checkPasswordStrength(password) {
+  if (!password) return { label: '', className: '' };
+
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  if (score <= 2) return { label: 'Faible', className: 'strength-weak' };
+  if (score <= 3) return { label: 'Moyen', className: 'strength-medium' };
+  return { label: 'Fort', className: 'strength-strong' };
+}
+
+authPassword.addEventListener('input', () => {
+  if (mode !== 'register') return;
+  const { label, className } = checkPasswordStrength(authPassword.value);
+  if (!label) {
+    passwordStrengthEl.style.display = 'none';
+    return;
+  }
+  passwordStrengthEl.style.display = 'block';
+  passwordStrengthEl.textContent = `Force du mot de passe : ${label}`;
+  passwordStrengthEl.className = className;
+});
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.style.display = 'block';
+  setTimeout(() => {
+    toast.style.display = 'none';
+  }, 3000);
+}
 
 // --- Point d'entrée : vérifie s'il y a un token de reset dans l'URL ---
 // --- Si un token existe déjà, tenter d'aller direct à l'app ---

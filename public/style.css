@@ -183,3 +183,36 @@ button[type='submit'] {
   color: #555;
   font-weight: 500;
 }
+
+#password-strength {
+  font-size: 0.85em;
+  margin-top: -4px;
+}
+.strength-weak {
+  color: #dc2626;
+}
+.strength-medium {
+  color: #d97706;
+}
+.strength-strong {
+  color: #16a34a;
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 1000;
+}
+
+#loading-spinner {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+}

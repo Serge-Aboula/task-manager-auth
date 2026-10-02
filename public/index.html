@@ -32,6 +32,7 @@
             👁️
           </button>
         </div>
+        <div id="password-strength" style="display: none"></div>
         <label class="checkbox-label" id="remember-me-wrapper">
           <input type="checkbox" id="remember-me" checked />
           Se souvenir de moi
@@ -104,6 +105,7 @@
           <option value="alpha">Alphabétique</option>
         </select>
       </div>
+      <div id="loading-spinner" style="display: none">Chargement...</div>
 
       <ul id="task-list"></ul>
       <div id="pagination-controls" style="display: none">
@@ -112,6 +114,8 @@
         <button id="next-page-btn">Suivant</button>
       </div>
     </section>
+
+    <div id="toast" class="toast" style="display: none"></div>
 
     <script src="script.js"></script>
   </body>
