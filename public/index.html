@@ -91,6 +91,19 @@
         <input type="text" id="task-input" placeholder="Nouvelle tâche..." required />
         <button type="submit">Ajouter</button>
       </form>
+      <div class="task-controls">
+        <span id="pending-counter"></span>
+        <select id="filter-select">
+          <option value="all">Toutes</option>
+          <option value="pending">Non terminées</option>
+          <option value="done">Terminées</option>
+        </select>
+        <select id="sort-select">
+          <option value="newest">Plus récentes</option>
+          <option value="oldest">Plus anciennes</option>
+          <option value="alpha">Alphabétique</option>
+        </select>
+      </div>
 
       <ul id="task-list"></ul>
       <div id="pagination-controls" style="display: none">

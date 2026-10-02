@@ -15,13 +15,30 @@ const logoutBtn = document.getElementById('logout-btn');
 const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('task-input');
 const taskList = document.getElementById('task-list');
+
+const forgotView = document.getElementById('forgot-view');
+const resetView = document.getElementById('reset-view');
+const forgotPasswordLink = document.getElementById('forgot-password-link');
+const backToLoginBtn = document.getElementById('back-to-login-btn');
+const forgotForm = document.getElementById('forgot-form');
+const forgotEmail = document.getElementById('forgot-email');
+const forgotResult = document.getElementById('forgot-result');
+const resetForm = document.getElementById('reset-form');
+const resetNewPassword = document.getElementById('reset-new-password');
+
 const paginationControls = document.getElementById('pagination-controls');
 const prevPageBtn = document.getElementById('prev-page-btn');
 const nextPageBtn = document.getElementById('next-page-btn');
 const pageIndicator = document.getElementById('page-indicator');
-let currentPage = 1;
 
+const filterSelect = document.getElementById('filter-select');
+const sortSelect = document.getElementById('sort-select');
+const pendingCounter = document.getElementById('pending-counter');
+
+let currentPage = 1;
 let mode = 'login'; // ou 'register'
+let currentFilter = 'all';
+let currentSort = 'newest';
 
 function showError(message) {
   errorBox.textContent = message;
@@ -139,7 +156,9 @@ function authFetch(url, options = {}) {
 async function fetchTasks(page = 1) {
   try {
     clearError();
-    const res = await authFetch(`/api/tasks?page=${page}&limit=10`);
+    const res = await authFetch(
+      `/api/tasks?page=${page}&limit=10&filter=${currentFilter}&sort=${currentSort}`
+    );
     if (res.status === 401) {
       clearSession();
       showAuthView();
@@ -151,6 +170,7 @@ async function fetchTasks(page = 1) {
     currentPage = data.pagination.page;
     renderTasks(data.tasks);
     renderPagination(data.pagination);
+    renderPendingCounter(data.pendingCount);
   } catch (err) {
     console.error('Erreur de connexion:', err);
     showError('Erreur de connexion au serveur.');
@@ -291,16 +311,6 @@ document.getElementById('edit-name-btn').addEventListener('click', async () => {
   }
 });
 
-const forgotView = document.getElementById('forgot-view');
-const resetView = document.getElementById('reset-view');
-const forgotPasswordLink = document.getElementById('forgot-password-link');
-const backToLoginBtn = document.getElementById('back-to-login-btn');
-const forgotForm = document.getElementById('forgot-form');
-const forgotEmail = document.getElementById('forgot-email');
-const forgotResult = document.getElementById('forgot-result');
-const resetForm = document.getElementById('reset-form');
-const resetNewPassword = document.getElementById('reset-new-password');
-
 function hideAllViews() {
   authView.style.display = 'none';
   appView.style.display = 'none';
@@ -433,6 +443,20 @@ prevPageBtn.addEventListener('click', () => {
 
 nextPageBtn.addEventListener('click', () => {
   fetchTasks(currentPage + 1);
+});
+
+function renderPendingCounter(pendingCount) {
+  pendingCounter.textContent = `${pendingCount} tâche${pendingCount !== 1 ? 's' : ''} restante${pendingCount !== 1 ? 's' : ''}`;
+}
+
+filterSelect.addEventListener('change', () => {
+  currentFilter = filterSelect.value;
+  fetchTasks(1); // retour en page 1, le nombre total de pages change avec le filtre
+});
+
+sortSelect.addEventListener('change', () => {
+  currentSort = sortSelect.value;
+  fetchTasks(1);
 });
 
 // --- Point d'entrée : vérifie s'il y a un token de reset dans l'URL ---
